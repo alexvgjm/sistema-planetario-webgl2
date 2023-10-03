@@ -1,0 +1,36 @@
+:root {
+    --color-background-lighter: #434343; 
+    --color-background-light: #2a2a2a; 
+    --color-background: #151515;      
+    --color-font: #fefefe;
+}
+* {
+    margin: 0;
+    padding: 0;
+}
+body {
+    overflow: hidden;
+    min-height: 100vh;
+}
+
+.gui-cuerpos.dg.main {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    max-height: 100vh;
+    max-width: 20rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.gui-cuerpos .folder {
+    border-left: none !important;
+    margin-left: 0.25rem;
+}
+
+.gui-cuerpos .close-button {
+    position: static !important;
+    width: 100% !important;
+}
