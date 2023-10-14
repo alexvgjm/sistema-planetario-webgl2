@@ -87,12 +87,13 @@ export function createRenderObjects(gl) {
     gl.useProgram(program)
 
     const viewLoc = gl.getUniformLocation(program, 'uView')
+    const ambientLightLoc = gl.getUniformLocation(program, 'uAmbientLight')
     const transformLoc = gl.getAttribLocation(program, 'aTransform')
     const colorLoc = gl.getAttribLocation(program, 'aColor')
     const coordLoc = gl.getAttribLocation(program, 'aCoords')
+    const normalLoc = gl.getAttribLocation(program, 'aNormal')
 
-    // ============         VERTEX DE LAS ÓRBITAS          ====================
-    // Usando instanciación como en la anterior entrega.
+    // ============          VERTICES DE LAS ÓRBITAS         ===================
     const orbitaVAO = gl.createVertexArray()
     gl.bindVertexArray(orbitaVAO)
     const orbitaVertexBuffer = gl.createBuffer()
@@ -108,11 +109,11 @@ export function createRenderObjects(gl) {
 
     // =============   BUFFER DE TRANSFORMACIONES Y COLORES =================
     const transformsBuffer = gl.createBuffer()
-    // Como se usa el mismo buffer también para transform/colores de planetas
-    // hay que definir los mismos atributos en dos ocasiones. Por eso un método.
     initTransformBufferAttribs(gl, transformsBuffer, transformLoc, colorLoc)
     gl.bindVertexArray(null)
+    
 
+    // =============         VÉRTICES DE LOS CUERPOS        =================
     const cuerpoVAO = gl.createVertexArray()
     gl.bindVertexArray(cuerpoVAO)
     const planetaVertexBuffer = gl.createBuffer()
@@ -137,10 +138,19 @@ export function createRenderObjects(gl) {
         }
     }
     verticesEsfera.push(0, 1, 0) // Vértice del polo norte
-
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesEsfera), gl.STATIC_DRAW)
 
+
+    // ============   NORMALES DE LOS VÉRTICES DE LOS CUERPOS  =================
+    const normales = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, normales)
+    gl.enableVertexAttribArray(normalLoc)
+    gl.vertexAttribPointer(normalLoc, 3, gl.FLOAT, false, 12, 0)
+    // Como es una esfera, sus normales coinciden.
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesEsfera), gl.STATIC_DRAW)
     
+
+
     const cuerpoIndexBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cuerpoIndexBuffer)
     const indices = []
@@ -177,7 +187,7 @@ export function createRenderObjects(gl) {
     return {
         program, 
         vaos: { cuerpoVAO, orbitaVAO },
-        locations: { coordLoc, colorLoc, transformLoc, viewLoc }
+        locations: { coordLoc, colorLoc, transformLoc, viewLoc, ambientLightLoc }
     }
 }
 
@@ -209,8 +219,13 @@ export function cuerposAFloat32(cuerpos, pm = mat4.create()) {
         let escalada = mat4.scale(
             mat4.create(), m, vec3.fromValues(p.tam/10, p.tam/10, p.tam/10))
 
-
-        f32.push(...escalada, ...p.color)
+        
+        if (p.autoiluminado) {
+            f32.push(...escalada, p.color[0]*5,p.color[1]*5,p.color[2]*5)
+        } else {
+            f32.push(...escalada, ...p.color)
+        }
+        
         f32.push(...cuerposAFloat32(p.satelites, m))
     })
 
@@ -239,8 +254,9 @@ export function orbitasAFloat32(cuerpos, pm = mat4.create()) {
 
         mat4.translate(m, m, vec3.fromValues(p.dist, 0, 0))
         mat4.rotateY(m, m, -p.fase)
-
-        f32.push(...escalada, ...p.color)
+        
+        // Se multiplica el color base de la órbita. Siempre iluminada.
+        f32.push(...escalada, p.color[0]*3,p.color[1]*3,p.color[2]*3)
         f32.push(...orbitasAFloat32(p.satelites, m))
     })
 

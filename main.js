@@ -6,24 +6,51 @@ import { VERTICES_ESFERA, VERTICES_POR_CIRCULO, createRenderObjects, cuerposAFlo
 /** @type {WebGL2RenderingContext} */
 const gl = document.querySelector('#p5-canvas').getContext('webgl2')
 
-const renderObjects          = createRenderObjects(gl)
-const {orbitaVAO, cuerpoVAO} = renderObjects.vaos
-const {viewLoc}              = renderObjects.locations
+const renderObjects              = createRenderObjects(gl)
+const {orbitaVAO, cuerpoVAO}     = renderObjects.vaos
+const {viewLoc, ambientLightLoc} = renderObjects.locations
 
-                    //              Dist.  Inclin.         Color    Tam.  Vel.  Fase
-const star  = new Cuerpo('Estrella',   0,     0,         [1,  1,  0], 6,       0, 0)
-const lila  = new Cuerpo('Planeta 1',  1.25,  0,         [1,0.5,  1], 1.5,   0.2, -Math.PI/2)
-const azul  = new Cuerpo('Planeta 2',  2,     0,         [0.4,0.7,1], 2,   -0.15,  Math.PI)
-const rojo  = new Cuerpo('Planeta 3',  3,     0,         [1,0.6,0.6], 2.5,   0.1,  Math.PI/3)
-const verde = new Cuerpo('Planeta 4',  4,     0,         [0.6,1,0.6], 3.5, -0.05, -Math.PI/2)
-const lejos = new Cuerpo('Planeta 5',  5.5,  Math.PI/8,  [0.7,0.7,1], 1,    0.03, -Math.PI/2)
 
-const luna  = new Cuerpo('Luna',        1,-Math.PI/8, [1, 1, 1],     1,  0.1, 0)
-const subluna = new Cuerpo('Subluna', 0.5,-Math.PI/4, [1, 0.4, 0.4], 1, -0.2, Math.PI)
-star.addSatelite(lila, azul, rojo, verde, lejos)
-verde.addSatelite(luna)
+const star = new Cuerpo({
+    nombre: 'Estrella', tam: 10, color: [5,5,0], autoiluminado: true
+})
+
+const p1 = new Cuerpo({
+    nombre: 'Planeta 1',  distancia: 1.25,  color: [1,0.5,1], 
+    tam: 1.5,             velocidad: 0.2,    fase: -Math.PI/2})
+
+const p2 = new Cuerpo({
+    nombre: 'Planeta 2',  distancia: 2,        color: [0.4,0.7,1], 
+    tam: 2,               velocidad: -0.15,    fase: Math.PI/2})
+
+const p3 = new Cuerpo({
+    nombre: 'Planeta 3',  distancia: 3,        color: [1,0.6,0.6], 
+    tam: 2.5,             velocidad: 0.1,      fase: Math.PI/3})
+
+const p4 = new Cuerpo({
+    nombre: 'Planeta 4',  distancia: 4.5,        color: [0.6,1,0.6], 
+    tam: 3.5,             velocidad: -0.05,    fase: -Math.PI/2})
+
+const p5 = new Cuerpo({
+    nombre: 'Planeta 5',  distancia: 6,        color: [0.7,0.7,1], 
+    tam: 1,               velocidad: 0.03,     fase: -Math.PI/4, 
+    inclinacion: Math.PI/8})
+
+const luna = new Cuerpo({
+    nombre: 'Luna',       distancia: 1,        color: [1,1,1], 
+    tam: 1.5,             velocidad: 0.1,     fase: -Math.PI/4, 
+    inclinacion: -Math.PI/8
+})
+
+const subluna = new Cuerpo({
+    nombre: 'Luna',       distancia: 0.5,       color: [1,0.4,0.4], 
+    tam: 1,               velocidad: -0.2,      fase: -Math.PI/4, 
+    inclinacion: Math.PI/4
+})
+
+star.addSatelite(p1, p2, p3, p4, p5)
+p4.addSatelite(luna)
 luna.addSatelite(subluna)
-
 
 const inputSystem = new InputSystem(gl, star)
 
@@ -37,6 +64,7 @@ function updateAndRender() {
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     gl.uniformMatrix4fv(viewLoc, false, inputSystem.viewMatrix)
+    gl.uniform3f(ambientLightLoc, 0, 0, 0)
 
     gl.bindVertexArray(orbitaVAO)
     gl.bufferData(gl.ARRAY_BUFFER, orbitasAFloat32([star]), gl.STATIC_DRAW)

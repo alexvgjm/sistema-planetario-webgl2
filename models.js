@@ -1,28 +1,44 @@
 import { GUI } from "dat.gui"
 import { mat4, vec3 } from "gl-matrix"
 
+
+const CUERPO_DEFAULTS = {
+    nombre: 'Sin nombre',
+    tam: 1,
+    fase: 0,
+    inclinacion: 0,
+    color: [1, 0, 1],
+    distancia: 0,
+    velocidad: 1,
+    autoiluminado: false
+}
+
 /**
  * Representa un cuerpo de órbita completamente circular y color sólido que
  * puede tener satélites.
  */
 export class Cuerpo {
     /**
-     * @param {string} nombre Nombre del cuerpo.
-     * @param {number} distancia Distancia al cuerpo que orbita.
-     * @param {number} inclinacion grado de inclinación (-pi/2 a pi/2)
-     * @param {[number, number, number]} color 
-     * @param {number} tam Tamaño del cuerpo
-     * @param {number} velocidad Velocidad en vueltas completas por segundo.
-     * @param {number} fase En qué momento de su órbita está (0 a 2*pi).
+     * @param {object} opciones
+     * @param {string} opciones.nombre Nombre del cuerpo.
+     * @param {number} opciones.distancia Distancia al cuerpo que orbita.
+     * @param {number} opciones.inclinacion grado de inclinación (-pi/2 a pi/2)
+     * @param {[number, number, number]} opciones.color 
+     * @param {number} opciones.tam Tamaño del cuerpo
+     * @param {number} opciones.velocidad Velocidad en vueltas completas por segundo.
+     * @param {number} opciones.fase En qué momento de su órbita está (0 a 2*pi).
+     * @param {boolean} opciones.autoiluminado En qué momento de su órbita está (0 a 2*pi).
      */
-    constructor(nombre, distancia, inclinacion, color, tam = 1, velocidad = 0.25, fase = 0) {
-        this.nombre = nombre
-        this.dist = distancia
-        this.inclinacion = inclinacion
-        this.color = color
-        this.velocidad = velocidad
-        this.fase = fase
-        this.tam = tam
+    constructor(opciones) {
+        opciones = {...CUERPO_DEFAULTS, ...opciones}
+        this.nombre      = opciones.nombre
+        this.dist        = opciones.distancia
+        this.inclinacion = opciones.inclinacion
+        this.color       = opciones.color
+        this.velocidad   = opciones.velocidad
+        this.fase        = opciones.fase
+        this.tam         = opciones.tam
+        this.autoiluminado = opciones.autoiluminado
 
         /**  @type {Cuerpo[]} */
         this.satelites = []
@@ -72,7 +88,7 @@ export class InputSystem {
             rotacionZ: 0,
             x: 0,
             y: 0,
-            z: -1.6, //-14
+            z: -2.42
         }
 
         this._setupListeners()
@@ -83,8 +99,8 @@ export class InputSystem {
 
     get viewMatrix() {
         const aspect = this.canvas.width / this.canvas.height;
-        const near = 0.0001;
-        const far = 1000;
+        const near = 0.1;
+        const far = 100;
         
         const matrizProyeccion = mat4.perspective(mat4.create(), Math.PI/3, aspect, near, far);
         const matrizCamara = mat4.fromTranslation(mat4.create(), 
