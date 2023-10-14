@@ -18,7 +18,7 @@ void main(void) {
     );
 
     gl_Position = finalPos;
-    gl_PointSize = 100.0 / finalPos.z * xScale;
+    gl_PointSize = 50.0 / finalPos.z * xScale;
     flatColor = aColor;
 }`
 

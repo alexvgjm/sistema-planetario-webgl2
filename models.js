@@ -1,76 +1,11 @@
 import { GUI } from "dat.gui"
 import { mat4, vec3 } from "gl-matrix"
-import { matrixToStr } from "./utils"
 
 /**
  * Representa un cuerpo de órbita completamente circular y color sólido que
  * puede tener satélites.
  */
 export class Cuerpo {
-    /**
-     * Algoritmo recursivo. Transforma un cuerpo y sus satélites, 
-     * subsatélites, ..., a un array de float32. Cada cuerpo ocupa 19 floats
-     * (16 para matrix de transformación y 3 para el color).
-     * @param {Cuerpo[]} cuerpos Los cuerpos a convertir
-     * @param {mat4} pm (parent matrix). Las transformaciones acumuladas del
-     * padre, excluyendo escala. Por defecto (en raíz) es la matrix identidad.
-     */
-    static cuerposAFloat32(cuerpos, pm = mat4.create()) {
-        const f32 = []
-        
-        cuerpos.forEach((p) => {
-            let m = mat4.create()
-            mat4.rotateX(m, pm, p.inclinacion)
-            mat4.rotateZ(m, m, p.fase)
-            
-            mat4.translate(m, m, vec3.fromValues(p.dist, 0, 0))
-            mat4.rotateZ(m, m, -p.fase)
-
-            // Esta escala se usa para el tamaño del planeta, aunque
-            // con un punto en 0,0,0 no afecta, sí se usa para calcular
-            // el tamaño del punto. También funciona con otras geometrías
-            // como una futura esfera.
-            let escalada = mat4.scale(
-                mat4.create(), m, vec3.fromValues(p.tam, p.tam, p.tam))
-
-            
-            f32.push(...escalada, ...p.color)
-            f32.push(...Cuerpo.cuerposAFloat32(p.satelites, m))
-        })
-
-        return new Float32Array(f32)
-    }
-    /**
-     * Algoritmo recursivo. Transforma órbita de un cuerpo y la de sus
-     * satélites, subsatélites, ..., a un array de float32. Cada cuerpo ocupa
-     * 19 floats (16 para matrix de transformación y 3 para el color).
-     * @param {Cuerpo[]} cuerpos Los cuerpos a convertir
-     * @param {mat4} pm (parent matrix). Las transformaciones acumuladas del
-     * padre, excluyendo escala. Por defecto (en raíz) es la matrix identidad.
-     */
-    static orbitasAFloat32(cuerpos, pm = mat4.create()) {
-        const f32 = []
-        
-        cuerpos.forEach((p) => {
-            let m = mat4.create()
-            mat4.rotateX(m, pm, p.inclinacion)
-            mat4.rotateZ(m, m, p.fase)
-
-            // En el caso de las órbitas, esta escala ubica los vértices desde
-            // el centro. Sin embargo no debe transmitirse a sus hijos.
-            let escalada = mat4.scale(
-                mat4.create(), m, vec3.fromValues(p.dist, p.dist, p.dist))
-
-            mat4.translate(m, m, vec3.fromValues(p.dist, 0, 0))
-            mat4.rotateZ(m, m, -p.fase)
-
-            f32.push(...escalada, ...p.color)
-            f32.push(...Cuerpo.orbitasAFloat32(p.satelites, m))
-        })
-
-        return new Float32Array(f32)
-    }
-
     /**
      * @param {string} nombre Nombre del cuerpo.
      * @param {number} distancia Distancia al cuerpo que orbita.
@@ -132,12 +67,12 @@ export class InputSystem {
         this.canvas = gl.canvas
 
         this.camara = {
-            rotacionX: 2,
-            rotacionY: 0,
-            rotacionZ: 1.55,
+            rotacionX: 0,
+            rotacionY: 1.65,
+            rotacionZ: 0,
             x: 0,
             y: 0,
-            z: -14
+            z: -1.6, //-14
         }
 
         this._setupListeners()
@@ -175,9 +110,9 @@ export class InputSystem {
         gui.domElement.style.opacity = 0.8
         const cameraFolder = gui.addFolder('Cámara')
         const controlX = cameraFolder.add(this.camara, 'rotacionX', 0, Math.PI, 0.05)
-        const controlZ = cameraFolder.add(this.camara, 'rotacionZ', 0, Math.PI, 0.05)
+        const controlZ = cameraFolder.add(this.camara, 'rotacionY', 0, Math.PI, 0.05)
         controlX.name('Rotación X')
-        controlZ.name('Rotación Z')
+        controlZ.name('Rotación Y')
         const controlZoom = cameraFolder.add(this.camara, 'z', -50, -1, 0.01)
         controlZoom.name('Zoom');
         cameraFolder.open()
